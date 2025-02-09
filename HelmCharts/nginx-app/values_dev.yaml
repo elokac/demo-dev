@@ -18,11 +18,11 @@ service:
 
 resources:
   limits:
+    cpu: '50'
+    memory: '200Mi'
+  requests:
     cpu: '10m'
     memory: '128Mi'
-  requests:
-    cpu: '50m'
-    memory: '200Mi'
 
 livenessProbe:
   httpGet:
