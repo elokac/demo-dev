@@ -28,11 +28,6 @@ spec:
                 type: prometheus
                 url: http://prometheus-server.monitoring.svc.cluster.local
                 access: proxy
-                isDefault: true
-              - name: loki
-                type: loki
-                url: http://loki.monitoring.svc.cluster.local
-                access: proxy
         dashboardProviders:
           dashboardproviders.yaml:
             apiVersion: 1
