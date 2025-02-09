@@ -16,13 +16,14 @@ service:
   type: NodePort
   port: 80
 
-resources: {}
+resources:
   limits:
     cpu: 10m
     memory: 128Mi
   requests:
     cpu: 50m
     memory: 200Mi
+
 livenessProbe:
   httpGet:
     path: /
