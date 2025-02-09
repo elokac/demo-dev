@@ -100,7 +100,7 @@ We'll use Vagrant to create two Ubuntu 20.04 virtual machines.
     *   **`config.vm.network "private_network"`**: Configures a private network, allowing the VMs to communicate. Adjust the IP addresses as needed.
     *   **`config.vm.hostname`**: Sets the hostname of each VM.
     *   **`vb.memory` and `vb.cpus`**: Adjust the memory and CPU allocated to each VM based on your system resources. The settings above use 4GB of RAM, if you are having issues, reduce to 2048MB of RAM.
-    *   **`config.vm.provision "shell"`**:  Installs Docker on both VMs.
+    *   **`config.vm.provision "shell"`**:  Installs Docker.
 
 3.  **Start the VMs:**
 
@@ -131,15 +131,15 @@ We'll use Vagrant to create two Ubuntu 20.04 virtual machines.
     Follow the official Rancher installation instructions, but run Rancher locally on the VM using Docker:
 
     ```
-    docker run -d --restart=unless-stopped \
-      -p 80:80 -p 443:443 \
-      --privileged \
-      rancher/rancher:latest
+    docker run -d --name=rancher-server \
+        --restart=unless-stopped -p 80:80 -p 443:443 \
+        --privileged \
+        rancher/rancher:v2.4.18
     ```
 
     *   **`--privileged`**:  Required for Rancher to manage Kubernetes clusters.
     *   `-p 80:80 -p 443:443`:  Maps ports 80 and 443 on the host to the container.
-    *Note:* Rancher recommends at least 4 CPUs and 16 GB of memory
+    *Note:* Rancher recommends at least 4 CPUs and 16 GB of memory but we can use 2CPUs and 4GB of memory for this.
 
 3.  **Access Rancher UI:** Open a web browser and navigate to `https://192.168.56.10` (replace with the actual IP address of your `rancher-server` VM).  It may take several minutes for Rancher to fully initialize.
 
@@ -147,7 +147,8 @@ We'll use Vagrant to create two Ubuntu 20.04 virtual machines.
 
 1.  **Log in to Rancher UI:** Use the Rancher UI `https://192.168.56.10`.
 2.  **Create Cluster:** Go to the Cluster Management view.
-3.  Select "Create".
+3.  Select "Add Cluster".
+    image.png
 4.  Select "K3s".
 5.  Provide a cluster name (e.g., `my-k3s-cluster`).
 6.  Node Pools:  Add a node pool and configure the node pool to target the k3s-node (192.168.56.11) VM. You'll likely need to register the node by running a command on the k3s-node, which will be provided during the cluster creation process.
