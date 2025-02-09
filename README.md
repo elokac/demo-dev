@@ -38,48 +38,61 @@ We'll use Vagrant to create two Ubuntu 20.04 virtual machines.
     Create a file named `Vagrantfile` in your project directory. This file defines the configuration for your virtual machines.
 
     ```
-    # -*- mode: ruby -*-
-    # vi: set ft=ruby :
-
     Vagrant.configure("2") do |config|
-      # VM 1: Rancher Server
-      config.vm.define "rancher-server" do |rancher|
-        rancher.vm.box = "bento/ubuntu-20.04" # Or "ubuntu/focal64"
+        # ----- VM 1: Rancher Server -----
+        config.vm.define "rancher-server" do |rancher|
+            rancher.vm.box = "ubuntu/focal64"
+            rancher.vm.box_version = "20240821.0.1"
 
-        # Configure a static IP address for the Rancher server
-        rancher.vm.network "private_network", ip: "192.168.56.10" # Adjust as needed
-        rancher.vm.hostname = "rancher-server"
-        rancher.vm.provider "virtualbox" do |vb|
-            vb.memory = "4096" # 4GB RAM
-            vb.cpus = 2
+            rancher.vm.network "private_network", ip: "192.168.56.10"
+            rancher.vm.hostname = "rancher-server"
+
+            # Port forwarding for Rancher UI
+            rancher.vm.network "forwarded_port", guest: 80, host: 80, auto_correct: true
+            rancher.vm.network "forwarded_port", guest: 443, host: 443, auto_correct: true
+
+            rancher.vm.provider "virtualbox" do |vb|
+                vb.memory = "4096"  # 4GB RAM
+                vb.cpus = 2         # Adjust as needed 
+                vb.name = "Rancher Server VM"
+            end
+
+            # Provisioning script for Rancher server (includes Docker)
+            rancher.vm.provision "shell", inline: <<-SHELL
+                echo "Running provisioning script for Rancher server..."
+
+                # Update apt and install Docker
+                sudo apt-get update
+                sudo apt-get install -y docker.io
+                sudo usermod -aG docker $USER
+                newgrp docker
+                sudo systemctl enable docker
+
+
+                echo "docker installation complete."
+            SHELL
         end
 
-        # Provision Docker
-        rancher.vm.provision "shell", inline: <<-SHELL
-          sudo apt-get update
-          sudo apt-get install -y docker.io
-          sudo systemctl enable docker
-        SHELL
-      end
+        # ----- VM 2: k3s Node -----
+        config.vm.define "k3s-node" do |k3s|
+            k3s.vm.box = "ubuntu/focal64"
+            k3s.vm.box_version = "20240821.0.1"
 
-      # VM 2: k3s Node
-      config.vm.define "k3s-node" do |k3s|
-        k3s.vm.box = "bento/ubuntu-20.04" # Or "ubuntu/focal64"
-        # Configure a static IP address for the k3s node
-        k3s.vm.network "private_network", ip: "192.168.56.11" #Adjust as needed
-        k3s.vm.hostname = "k3s-node"
-         k3s.vm.provider "virtualbox" do |vb|
-            vb.memory = "4096" # 4GB RAM
-            vb.cpus = 2
+            k3s.vm.network "private_network", ip: "192.168.56.11"
+            k3s.vm.hostname = "k3s-node"
+
+            k3s.vm.provider "virtualbox" do |vb|
+                vb.memory = "4096" # 4GB RAM
+                vb.cpus = 2        # Adjust as needed
+                vb.name = "K3s Node VM"
+            end
+
+            # No provisioning script for K3s Node (DO NOT INSTALL DOCKER)
+            k3s.vm.provision "shell", inline: <<-SHELL
+                echo "Running provisioning script for K3s node..."
+                echo "K3s node provisioning complete.  Docker is NOT installed."
+            SHELL
         end
-
-        # Provision Docker
-        k3s.vm.provision "shell", inline: <<-SHELL
-          sudo apt-get update
-          sudo apt-get install -y docker.io
-          sudo systemctl enable docker
-        SHELL
-      end
     end
     ```
 
