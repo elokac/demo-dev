@@ -13,7 +13,7 @@ spec:
   source:
   # - repoURL:  https://github.com/<git-username>/<git-repo>.git
   #   targetRevision: HEAD
-  - repoURL: https://grafana.github.io/helm-charts
+    repoURL: https://grafana.github.io/helm-charts
     chart: grafana
     targetRevision: 6.52.2
     helm:
