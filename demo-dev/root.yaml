@@ -8,7 +8,7 @@ spec:
   project: default
   source:
     repoURL: https://github.com/elokac/demo-dev.git
-    path: applications
+    path: demo-dev/applications
     targetRevision: HEAD
   destination:
     server: https://kubernetes.default.svc
