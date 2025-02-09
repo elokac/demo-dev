@@ -1,0 +1,33 @@
+replicaCount: 2
+image:
+  repository: nginx
+  pullPolicy: IfNotPresent
+  tag: latest
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+serviceAccount:
+  create: true
+  automount: true
+  annotations: {}
+  name: ""
+service:
+  type: NodePort
+  port: 80
+
+resources: {}
+  limits:
+    cpu: 10m
+    memory: 128Mi
+  requests:
+    cpu: 50m
+    memory: 200Mi
+livenessProbe:
+  httpGet:
+    path: /
+    port: http
+readinessProbe:
+  httpGet:
+    path: /
+    port: http
