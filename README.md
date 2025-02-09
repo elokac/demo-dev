@@ -149,8 +149,9 @@ We'll use Vagrant to create two Ubuntu 20.04 virtual machines.
 2.  **Create Cluster:** Go to the Cluster Management view.
 3.  Select "Add Cluster".
     image.png
-4.  Select "K3s".
-5.  Provide a cluster name (e.g., `my-k3s-cluster`).
+4.  Select "custom Node".
+    image.png
+5.  Provide a cluster name (e.g., `demo-dev-cluster`).
 6.  Node Pools:  Add a node pool and configure the node pool to target the k3s-node (192.168.56.11) VM. You'll likely need to register the node by running a command on the k3s-node, which will be provided during the cluster creation process.
 7.  Complete the cluster configuration and click "Create".
 8.  Wait for the K3s cluster to become active and available in the Rancher UI.
