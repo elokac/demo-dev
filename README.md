@@ -388,7 +388,7 @@ We'll use Vagrant to create two Ubuntu 20.04 virtual machines.
 8.  Argo CD will automatically detect the new `Application` and deploy your custom Helm chart.
 
 ## 8. Directory Structure
-
+```
 .
 ├── HelmCharts
 │   └── nginx-app
@@ -415,3 +415,4 @@ We'll use Vagrant to create two Ubuntu 20.04 virtual machines.
     ├── argocd.tf
     ├── namespace.tf
     └── providers.tf
+```
