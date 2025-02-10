@@ -149,12 +149,24 @@ We'll use Vagrant to create two Ubuntu 20.04 virtual machines.
 2.  **Create Cluster:** Go to the Cluster Management view.
 3.  Select "Add Cluster".
     ![Alt text](./Infrastructure-setup/cluster-1.jpeg)
-4.  Select "custom Node".
-    image.png
-5.  Provide a cluster name (e.g., `demo-dev-cluster`).
-6.  Node Pools:  Add a node pool and configure the node pool to target the k3s-node (192.168.56.11) VM. You'll likely need to register the node by running a command on the k3s-node, which will be provided during the cluster creation process.
-7.  Complete the cluster configuration and click "Create".
-8.  Wait for the K3s cluster to become active and available in the Rancher UI.
+4.  Select "From the existing Node (custom)".
+    ![Alt text](./Infrastructure-setup/cluster-2.png)
+5.  Provide a cluster name (e.g., `demo-dev-cluster`) and put the network provider to `calicio` then leave every other thing to default and click next.
+    ![Alt text](./Infrastructure-setup/cluster-3.png)
+6.  Master and Node Pools:  select `etcd`, `control Plane` and ` worker` because we want the second VM to serve as a 1 node cluster. Then Select Advance setting. 
+    ![Alt text](./Infrastructure-setup/cluster-4.png)
+    In order case you can use 1 node as control plane, then you select only control plane and etcd. then adding worker node, you select Worker.
+7.  Update Advance setting with private IP address of the Node you are adding. because we are using Virtualbox, without explicitly adding it, it will be difficult for Rancher server Node to connect to it.
+    ![Alt text](./Infrastructure-setup/cluster-5.png)
+8.  Copy the generated script and go to the VM you are adding to the cluster.
+    Note: the script can only work when docker as been installed in that server and there is a unique docker versions that only work in a cluster.
+    ![Alt text](./Infrastructure-setup/cluster-6.png)
+    next step is to show you how to get the correct docker version
+9. Click on Setting, then you would see `https://releases.rancher.com/install-docker/19.03.sh`. That's docker version.
+   ![Alt text](./Infrastructure-setup/cluster-7.png)
+   ssh to the terminal of the node you are adding to the cluster and run below command to install docker.
+   `curl https://releases.rancher.com/install-docker/19.03.sh | sh`
+   after this, you can run the command generated in step 8.
 
 ## 5. (Optional) Install Argo CD with Terraform
 
@@ -166,56 +178,52 @@ We'll use Vagrant to create two Ubuntu 20.04 virtual machines.
         terraform {
           required_providers {
             kubernetes = {
-              source  = "hashicorp/kubernetes"
-              version = "~> 2.0"
-            }
-            helm = {
-              source  = "hashicorp/helm"
-              version = "~> 2.0"
+              source = "hashicorp/kubernetes"
+              version = "2.32.0"
             }
           }
         }
 
         provider "kubernetes" {
-          # Configure the Kubernetes provider
-          # Example:
-          host                   = "https://<your-k3s-cluster-endpoint>"  # Replace with your k3s cluster endpoint
-          client_certificate     = file("<path-to-your-k3s-client-certificate>") # Replace with your k3s client certificate
-          client_key             = file("<path-to-your-k3s-client-key>")       # Replace with your k3s client key
-          cluster_ca_certificate = file("<path-to-your-k3s-cluster-ca-certificate>") # Replace with your k3s cluster CA certificate
+            config_path    = "../kubeconfig"
+            config_context = "demo-dev"
         }
 
         provider "helm" {
           kubernetes {
-            host                   = "https://<your-k3s-cluster-endpoint>"  # Replace with your k3s cluster endpoint
-            client_certificate     = file("<path-to-your-k3s-client-certificate>") # Replace with your k3s client certificate
-            client_key             = file("<path-to-your-k3s-client-key>")       # Replace with your k3s client key
-            cluster_ca_certificate = file("<path-to-your-k3s-cluster-ca-certificate>") # Replace with your k3s cluster CA certificate
+            config_path = "../kubeconfig"
           }
         }
         ```
 
-        *   **Note:** The Kubernetes provider requires configuration to connect to your K3s cluster.  You'll need to retrieve the necessary credentials (host, client certificate, client key, and cluster CA certificate) from your K3s cluster configuration. These are often found in the `kubeconfig.yaml` file. If you are running on a localhost/private network, set `insecure = true` and skip the certificate parameters to avoid the certificate error.
+        *   **Note:** The Kubernetes provider requires configuration to connect to your K3s cluster.  You'll need to retrieve the necessary credentials from your K3s cluster configuration. These are often found in the `kubeconfig.yaml` file. To get this, you can get from the Cluster you created in the Rancher UI.
+        ![Alt text](./Infrastructure-setup/cluster-8.png)
 
     *   `terraform-script/namespace.tf`:
         ```
-        resource "kubernetes_namespace" "argo_cd" {
+        resource "kubernetes_namespace" "argocd" {
           metadata {
-            name = "argo-cd"
+            annotations = {
+              name = "k3s-cluster"
+            }
+
+            labels = {
+              managedby = "terraform"
+            }
+
+            name = "argocd"
           }
         }
         ```
     *   `terraform-script/argocd.tf`:
 
         ```
-        resource "helm_release" "argo_cd" {
-          name       = "argo-cd"
-          namespace  = kubernetes_namespace.argo_cd.metadata.name
+        resource "helm_release" "argocd" {
+          name       = "argocd"
+          namespace  = "argocd"
+          chart      = "argocd"
+          version    = "3.23.0"
           repository = "https://argoproj.github.io/argo-helm"
-          chart      = "argo-cd"
-          version    = "5.51.3"
-
-          depends_on = [kubernetes_namespace.argo_cd]
         }
         ```
 
@@ -258,33 +266,34 @@ We'll use Vagrant to create two Ubuntu 20.04 virtual machines.
         └── root.yaml
     ```
 
-2.  **Create Argo CD Application Manifest (e.g., `app1.yaml`):**
+2.  **Create Argo CD Application Manifest (e.g., `root.yaml`):**
 
     ```
     apiVersion: argoproj.io/v1alpha1
     kind: Application
     metadata:
-      name: kube-state-metrics # Name for your app
-      namespace: argocd        # Important: Must be in the Argo CD namespace
+      name: root-app
+      finalizers:
+      - resources-finalizer.argocd.argoproj.io
     spec:
       project: default
       source:
-        repoURL: https://github.com/your-username/your-repo  # Your Git repo
-        targetRevision: HEAD         # Latest commit
-        path: demo-dev/applications/kube-state-metrics # Path to app
+        repoURL: https://github.com/elokac/demo-dev.git
+        path: demo-dev/applications
+        targetRevision: HEAD
       destination:
-        server: https://kubernetes.default.svc  # In-cluster
-        namespace: monitoring           # Deploy to this namespace
+        server: https://kubernetes.default.svc
+        namespace: default
       syncPolicy:
         automated:
-          prune: true                  # Automatically remove deleted resources
-          selfHeal: true                 # Automatically revert changes
+          selfHeal: true
+          prune: true
     ```
 
 3.  **Deploy the Initial App:**
 
     ```
-    kubectl apply -n argocd -f <app1.yaml path on github>
+    kubectl apply -n argocd -f <root.yaml path on github>
     ```
 
 4.  **Connect the ArgoCD to the Github:** Connect the ArgoCD to the Github, by going to setting and Repository connection, then connect repo, and choose the right credentials for connecting ArgoCD to the repository.
@@ -294,73 +303,20 @@ We'll use Vagrant to create two Ubuntu 20.04 virtual machines.
 
 ## 7. Bonus: Deploy a Custom Helm Chart
 
-1.  **Create a directory named `HelmCharts` in your repository.**
-2.  **Inside `HelmCharts`, create a directory for your chart (e.g., `nginx-app`).**
-3.  Create a `Chart.yaml` inside HelmCharts/nginx-app
+1.  **Create a a new helm chart named `HelmCharts` in your repository.**
+     `helm create HelmChart`
 
-    ```
-    apiVersion: v2
-    name: nginx-app
-    description: A simple nginx Helm chart
-    type: application
-    version: 0.1.0
-    appVersion: "1.21.0"
-    ```
-
-4.  Create a directory named `templates` inside HelmCharts/nginx-app and create a deployment.yaml and service.yaml
-
-    ```
-    apiVersion: apps/v1
-    kind: Deployment
-    metadata:
-      name: {{ .Release.Name }}-deployment
-      labels:
-        app: {{ .Release.Name }}
-    spec:
-      replicas: 1
-      selector:
-        matchLabels:
-          app: {{ .Release.Name }}
-      template:
-        metadata:
-          labels:
-            app: {{ .Release.Name }}
-        spec:
-          containers:
-            - name: nginx
-              image: nginx:{{ .Values.image.tag }}
-              ports:
-                - containerPort: 80
-    ```
-
-    ```
-    apiVersion: v1
-    kind: Service
-    metadata:
-      name: {{ .Release.Name }}-service
-      labels:
-        app: {{ .Release.Name }}
-    spec:
-      type: {{ .Values.service.type }}
-      ports:
-        - port: {{ .Values.service.port }}
-          targetPort: 80
-          protocol: TCP
-      selector:
-        app: {{ .Release.Name }}
-    ```
-
-5.  Create a file named values.yaml inside HelmCharts/nginx-app
+5.  update a file named values.yaml inside HelmCharts/nginx-app
 
     ```
     image:
       tag: latest
     service:
-      type: ClusterIP
+      type: NodePort
       port: 80
     ```
 
-6.  Create a new Argo CD `Application` resource (e.g., `app2.yaml`) to deploy your custom Helm chart.
+6.  Create a new Argo CD `Application` resource (e.g., `nginx-app.yaml`) to deploy your custom Helm chart.
 
     ```
     apiVersion: argoproj.io/v1alpha1
@@ -406,6 +362,17 @@ We'll use Vagrant to create two Ubuntu 20.04 virtual machines.
 │       │       └── test-connection.yaml
 │       ├── values.yaml
 │       └── values_dev.yaml
+├── Infrastructure-setup
+│   ├── Cluster-5.png
+│   ├── Cluster-8.png
+│   ├── Vagrantfile
+│   ├── cluster-1.jpeg
+│   ├── cluster-2.png
+│   ├── cluster-3.png
+│   ├── cluster-4.png
+│   ├── cluster-6.png
+│   └── cluster-7.png
+├── README.md
 ├── demo-dev
 │   ├── applications
 │   │   ├── app1.yaml
