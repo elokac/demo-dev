@@ -148,7 +148,7 @@ We'll use Vagrant to create two Ubuntu 20.04 virtual machines.
 1.  **Log in to Rancher UI:** Use the Rancher UI `https://192.168.56.10`.
 2.  **Create Cluster:** Go to the Cluster Management view.
 3.  Select "Add Cluster".
-    image.png
+    ![Alt text](./Infrastructure-setup/cluster-1.jpeg)
 4.  Select "custom Node".
     image.png
 5.  Provide a cluster name (e.g., `demo-dev-cluster`).
