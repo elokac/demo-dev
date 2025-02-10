@@ -306,7 +306,7 @@ We'll use Vagrant to create two Ubuntu 20.04 virtual machines.
 1.  **Create a a new helm chart named `HelmCharts` in your repository.**
      `helm create HelmChart`
 
-5.  update a file named values.yaml inside HelmCharts/nginx-app
+2.  update a file named values.yaml inside HelmCharts/nginx-app
 
     ```
     image:
@@ -316,7 +316,7 @@ We'll use Vagrant to create two Ubuntu 20.04 virtual machines.
       port: 80
     ```
 
-6.  Create a new Argo CD `Application` resource (e.g., `nginx-app.yaml`) to deploy your custom Helm chart.
+3.  Create a new Argo CD `Application` resource (e.g., `nginx-app.yaml`) to deploy your custom Helm chart.
 
     ```
     apiVersion: argoproj.io/v1alpha1
@@ -340,8 +340,12 @@ We'll use Vagrant to create two Ubuntu 20.04 virtual machines.
     ```
 
     If you wanted to create values_dev.yaml, you'd need to copy the file and create a resource on the Argo CD.
-7.  Commit and push the changes to your Git repository.
-8.  Argo CD will automatically detect the new `Application` and deploy your custom Helm chart.
+4.  Commit and push the changes to your Git repository.
+5.  Argo CD will automatically detect the new `Application` and deploy your custom Helm chart.
+
+You can log on to ArgoCD and see that the application is deployed.
+![Alt text](./Infrastructure-setup/cluster-9.png)
+
 
 ## 8. Directory Structure
 ```
