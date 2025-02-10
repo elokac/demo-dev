@@ -197,7 +197,7 @@ We'll use Vagrant to create two Ubuntu 20.04 virtual machines.
         ```
 
         *   **Note:** The Kubernetes provider requires configuration to connect to your K3s cluster.  You'll need to retrieve the necessary credentials from your K3s cluster configuration. These are often found in the `kubeconfig.yaml` file. To get this, you can get from the Cluster you created in the Rancher UI.
-        ![Alt text](./Infrastructure-setup/cluster-8.png)
+        ![Alt text](./Infrastructure-setup/Cluster-8.png)
 
     *   `terraform-script/namespace.tf`:
         ```
