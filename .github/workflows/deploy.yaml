@@ -1,4 +1,4 @@
- jira Exporter Workflow
+name: jira Exporter Workflow
 # This workflow responsible for running jira exporter.
 # jira_host: The URL of your Jira, for example: https://example.atlassian.net
 # atlassian_user_email: The email of the user used to query Jira
