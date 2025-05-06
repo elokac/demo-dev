@@ -1,4 +1,4 @@
-name: jira Exporter Workflow
+name: jira Exporter Workflow for Port
 
 on:
   push:
