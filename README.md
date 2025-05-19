@@ -1,4 +1,4 @@
-# Setting up a K3s Cluster with Rancher and Argo CD using Terraform
+# Setting up a K3s Cluster with Rancher and Argo CD using Terraform.
 
 This document provides a step-by-step guide to setting up a K3s cluster on two Ubuntu 20.04 virtual machines using Vagrant and VirtualBox. It covers installing Rancher, deploying a K3s cluster using Rancher, optionally installing Argo CD with Terraform, and deploying applications using Argo CD.
 
